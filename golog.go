@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type goLog struct {
+type GoLog struct {
 	zapLog     *zap.Logger
 	Path       string `json:"path"`        //日志文件保存路径 stdout | .log
 	Level      string `json:"level"`       //打印的日志级别
@@ -24,8 +24,8 @@ type goLog struct {
 	Compress   bool   `json:"compress"`    //是否压缩
 }
 
-func LoadConfig(config ...string) (*goLog, error) {
-	log := goLog{
+func LoadConfig(config ...string) (*GoLog, error) {
+	log := GoLog{
 		Path:       "stdout",
 		Level:      "info",
 		MaxSize:    128,
@@ -92,18 +92,18 @@ func LoadConfig(config ...string) (*goLog, error) {
 	return &log, nil
 }
 
-func (log *goLog) Debug(msg ...interface{}) {
+func (log *GoLog) Debug(msg ...interface{}) {
 	log.zapLog.Debug(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log *goLog) Info(msg ...interface{}) {
+func (log *GoLog) Info(msg ...interface{}) {
 	log.zapLog.Info(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log *goLog) Warn(msg ...interface{}) {
+func (log *GoLog) Warn(msg ...interface{}) {
 	log.zapLog.Warn(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log goLog) Error(msg ...interface{}) {
+func (log *GoLog) Error(msg ...interface{}) {
 	log.zapLog.Error(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
