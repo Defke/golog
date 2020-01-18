@@ -12,8 +12,9 @@ import (
 	"time"
 )
 
-type GoLog struct {
-	zapLog     *zap.Logger
+var goLog *zap.Logger
+
+type conf struct {
 	Path       string `json:"path"`        //日志文件保存路径 stdout | .log
 	Level      string `json:"level"`       //打印的日志级别
 	MaxSize    int    `json:"max_size"`    //切割大小
@@ -24,8 +25,8 @@ type GoLog struct {
 	Compress   bool   `json:"compress"`    //是否压缩
 }
 
-func LoadConfig(config ...string) (*GoLog, error) {
-	log := GoLog{
+func LoadConfig(config ...string) error {
+	log := conf{
 		Path:       "stdout",
 		Level:      "info",
 		MaxSize:    128,
@@ -36,10 +37,10 @@ func LoadConfig(config ...string) (*GoLog, error) {
 	}
 	if len(config) > 0 {
 		if err := json.Unmarshal([]byte(config[0]), &log); err != nil {
-			return nil, err
+			return err
 		}
 		if log.Path == "" {
-			return nil, errors.New("日志文件路径未配置")
+			return errors.New("日志文件路径未配置")
 		}
 	}
 	zapConf := zap.NewProductionEncoderConfig()
@@ -84,26 +85,26 @@ func LoadConfig(config ...string) (*GoLog, error) {
 	}
 	core := zapcore.NewCore(enc, ws, enable)
 	if log.Caller {
-		log.zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+		goLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	} else {
-		log.zapLog = zap.New(core)
+		goLog = zap.New(core)
 	}
-	log.Info("log日志加载成功,打印到", log.Path)
-	return &log, nil
+	Info("log日志加载成功,打印到", log.Path)
+	return nil
 }
 
-func (log *GoLog) Debug(msg ...interface{}) {
-	log.zapLog.Debug(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
+func Debug(msg ...interface{}) {
+	goLog.Debug(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log *GoLog) Info(msg ...interface{}) {
-	log.zapLog.Info(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
+func Info(msg ...interface{}) {
+	goLog.Info(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log *GoLog) Warn(msg ...interface{}) {
-	log.zapLog.Warn(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
+func Warn(msg ...interface{}) {
+	goLog.Warn(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
 
-func (log *GoLog) Error(msg ...interface{}) {
-	log.zapLog.Error(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
+func Error(msg ...interface{}) {
+	goLog.Error(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
 }
