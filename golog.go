@@ -63,7 +63,7 @@ func LoadConfig(config ...string) error {
 	case "":
 		ws = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout))
 	default:
-		ws = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&lumberjack.Logger{
+		ws = zapcore.NewMultiWriteSyncer(zapcore.AddSync(&lumberjack.Logger{
 			Filename:   log.Path,
 			MaxAge:     log.MaxAge,
 			MaxSize:    log.MaxSize,
