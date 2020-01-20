@@ -3,18 +3,15 @@ package golog
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
-	"strings"
 	"time"
 )
 
-var goLog *zap.Logger
-
-type conf struct {
+type GoLog struct {
+	zapLog     *zap.Logger
 	Path       string `json:"path"`        //日志文件保存路径 stdout | .log
 	Level      string `json:"level"`       //打印的日志级别
 	MaxSize    int    `json:"max_size"`    //切割大小
@@ -25,8 +22,8 @@ type conf struct {
 	Compress   bool   `json:"compress"`    //是否压缩
 }
 
-func LoadConfig(config ...string) error {
-	log := conf{
+func LoadConfig(config ...string) (*GoLog, error) {
+	log := &GoLog{
 		Path:       "stdout",
 		Level:      "info",
 		MaxSize:    128,
@@ -36,11 +33,11 @@ func LoadConfig(config ...string) error {
 		Marshal:    false,
 	}
 	if len(config) > 0 {
-		if err := json.Unmarshal([]byte(config[0]), &log); err != nil {
-			return err
+		if err := json.Unmarshal([]byte(config[0]), log); err != nil {
+			return nil, err
 		}
 		if log.Path == "" {
-			return errors.New("日志文件路径未配置")
+			return nil, errors.New("日志文件路径未配置")
 		}
 	}
 	zapConf := zap.NewProductionEncoderConfig()
@@ -85,26 +82,10 @@ func LoadConfig(config ...string) error {
 	}
 	core := zapcore.NewCore(enc, ws, enable)
 	if log.Caller {
-		goLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+		log.zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	} else {
-		goLog = zap.New(core)
+		log.zapLog = zap.New(core)
 	}
-	Info("log日志加载成功,打印到", log.Path)
-	return nil
-}
 
-func Debug(msg ...interface{}) {
-	goLog.Debug(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
-}
-
-func Info(msg ...interface{}) {
-	goLog.Info(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
-}
-
-func Warn(msg ...interface{}) {
-	goLog.Warn(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
-}
-
-func Error(msg ...interface{}) {
-	goLog.Error(fmt.Sprintf(strings.Repeat("%v ", len(msg)), msg...))
+	return log, nil
 }
